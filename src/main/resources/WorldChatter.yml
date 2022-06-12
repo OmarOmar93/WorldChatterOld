@@ -1,0 +1,25 @@
+# - WorldChatter 1.2.5 By OmarOmar93 - #
+
+# BlackList Worlds from using the config
+BlackListWorlds:
+  - world_the_end
+  - world_nether
+
+
+# Other Settings
+ColoredText: true # Checks if you can change the & to § in chat
+ChatFormatting: true
+FormatStyle: "[%world%] %player%: " # Change it to placeholderapi's expressions if u have it
+AutoSave: true # If the config changes it will save it automatically (Requires Restart)
+
+# Security Settings
+AntiURL: true # Blocks any URL from player's message (BETA)
+AntiIP: true # Blocks any Numerical IP from player's message (BETA)
+ChatLock: true # Lock the chat from sending and unlocking it (Only for OPs)
+AntiSpam: 3 # Amount of seconds to take per message
+AntiSwear: true # Blocks any bad word from player's message
+CustomSwearWords:
+  - bisexual
+  - lesbian
+  - gay
+# this is not an assault im just trying to add words that the original anti-swear don't have
