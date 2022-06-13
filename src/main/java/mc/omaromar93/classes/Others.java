@@ -14,7 +14,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-
+import java.util.Objects;
 @SuppressWarnings("ALL")
 public class Others extends Thread {
 
@@ -27,10 +27,10 @@ public class Others extends Thread {
     private final HashMap<String, Integer> customwords = new HashMap<>();
 
     private int largestWordLength = 0;
-    private FileConfiguration Config = null;
-    private FileConfiguration BroadCastConfig = null;
+    private FileConfiguration Config;
+    private FileConfiguration BroadCastConfig;
 
-    private FileConfiguration MessageConfig = null;
+    private FileConfiguration MessageConfig;
 
     public FileConfiguration getConfig(){
         return this.Config;
@@ -61,9 +61,6 @@ public class Others extends Thread {
                     if (content[0].contains("whatsapp")) {
                         continue;
                     }
-                    if (content.length == 0) {
-                        continue;
-                    }
                     String word = content[0];
                     String[] ignore_in_combination_with_words = new String[]{};
                     if (content.length > 1) {
@@ -79,7 +76,7 @@ public class Others extends Thread {
                     e.printStackTrace();
                 }
             }
-            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Loaded " + counter + " words to filter out");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Loaded "+ChatColor.YELLOW + counter + " words to filter out");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -87,7 +84,7 @@ public class Others extends Thread {
 
     void loadCustomConfigs() {
         customwords.clear();
-        for (Object o : Config.getList("CustomSwearWords")) {
+        for (Object o : Objects.requireNonNull(Config.getList("CustomSwearWords"))) {
             customwords.put(o.toString().toLowerCase(), 1);
         }
     }
@@ -114,19 +111,19 @@ public class Others extends Thread {
         for (int start = 0; start < input.length(); start++) {
             for (int offset = 1; offset < (input.length() + 1 - start) && offset < largestWordLength; offset++) {
                 String wordToCheck = input.substring(start, start + offset);
+                String wordToCheck2 = input2.substring(start, start + offset);
                 if (words.containsKey(wordToCheck)) {
                     badWords.add(wordToCheck);
+                }
+                if (customwords.containsKey(wordToCheck2) && !badWords.contains(wordToCheck2)) {
+                    badWords.add(wordToCheck2);
                 } else if (customwords.containsKey(wordToCheck)) {
                     badWords.add(wordToCheck);
-                } else if (customwords.containsKey(input2) && !badWords.contains(input2)) {
-                    badWords.add(input2);
-                    break;
                 }
             }
         }
         return badWords;
     }
-
 
     boolean isUrl(String str) {
         String[] parts2 = str.split(" ");

@@ -38,8 +38,8 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
 
     @Override
     public void onDisable() {
-        others.stop();
-        updater.stop();
+        others.interrupt();
+        updater.interrupt();
     }
 
     @Override
@@ -57,7 +57,7 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
         others.createcustommessagesconfig();
         others.loadConfigs();
         others.loadCustomConfigs();
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Loaded Custom words from Config file");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Loaded "+ChatColor.YELLOW+ Objects.requireNonNull(getConfig().getList("CustomSwearWords")).size()+" Custom words from Config file");
         this.wcl = new WCL(this);
         wcl.addListener(this);
         if (updater.isPluginUpdated(Bukkit.getConsoleSender()))
@@ -93,7 +93,7 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerChat(AsyncPlayerChatEvent chat) {
-        if (!Objects.requireNonNull(others.getBroadCastConfig().getList("BlackListWorlds")).contains(chat.getPlayer().getWorld().getName())) {
+        if (!Objects.requireNonNull(others.getConfig().getList("BlackListWorlds")).contains(chat.getPlayer().getWorld().getName())) {
             chat.getRecipients().clear();
             Set<Player> receivers = new HashSet<>(chat.getPlayer().getWorld().getPlayers());
             chat.getRecipients().addAll(receivers);

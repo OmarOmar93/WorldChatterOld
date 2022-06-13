@@ -35,16 +35,16 @@ public class PluginUpdater extends Thread {
                 this.wcl.updateevent(update, this.main.getDescription().getVersion(), sender);
                 return true;
             }
-            if (update2 < updateold) {
+            else if (update2 < updateold) {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Looks like you're using an Early-access version of WorldChatter " + ChatColor.DARK_GRAY + "Or you just changed the code");
                 this.wcl.updateevent(update, this.main.getDescription().getVersion(), sender);
                 return true;
+            }else {
+                this.wcl.updateevent(update, this.main.getDescription().getVersion(), sender);
+                Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "You're using the latest WorldChatter!");
+                return false;
             }
-            this.wcl.updateevent(update, this.main.getDescription().getVersion(), sender);
-            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "You're using the latest WorldChatter!");
-            return false;
         } catch (Exception ignore) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while getting updates.");
         }
         return false;
     }
