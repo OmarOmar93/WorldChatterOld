@@ -1,12 +1,12 @@
 name: WorldChatter
-version: 1.2.5
+version: 1.2.9
 main: mc.omaromar93.classes.WorldChatter
 authors: [ OmarOmar93 ]
-description: Every world deserves it's own chat
+description: Every world deserves its own conversation.
 softdepend:
   - PlaceHolderAPI
 commands:
   worldchatter:
-    description: The Main Command of WorldChatter
+    description: The main command of WorldChatter
     aliases:
       - wc

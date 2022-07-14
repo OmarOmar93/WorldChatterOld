@@ -1,7 +1,0 @@
-# - WorldChatter Auto-Broadcast - #
-Worlds:
-  - world
-Texts:
-  - "Hello World! World Players > %world players%"
-  - "Welcome to the server everyone! Server Players > %server players%"
-Time: 20 # It's in seconds

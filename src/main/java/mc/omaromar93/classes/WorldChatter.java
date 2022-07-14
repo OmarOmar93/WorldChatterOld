@@ -15,12 +15,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitScheduler;
 import org.jetbrains.annotations.NotNull;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 public final class WorldChatter extends JavaPlugin implements Listener, WorldChatterListener {
 
@@ -29,64 +29,36 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
 
     private Boolean lockChat = false;
     private Boolean placeholderapisuppport = false;
-    private final Random rand = SecureRandom.getInstanceStrong();
     PluginUpdater updater;
-
-    public WorldChatter() throws NoSuchAlgorithmException {
-        // for random to work
-    }
 
     @Override
     public void onDisable() {
-        others.interrupt();
-        updater.interrupt();
     }
 
     @Override
     public void onEnable() {
-        this.others = new Others(this);
-        this.updater = new PluginUpdater(this);
-        getServer().getPluginManager().registerEvents(this, this);
-        Objects.requireNonNull(getCommand("worldchatter")).setExecutor(this);
-        others.start();
-        others.setName("Side-Features");
-        updater.start();
-        updater.setName("Updater");
-        others.createCustomConfig();
-        others.createcustombroadcastconfig();
-        others.createcustommessagesconfig();
-        others.loadConfigs();
-        others.loadCustomConfigs();
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Loaded "+ChatColor.YELLOW+ Objects.requireNonNull(getConfig().getList("CustomSwearWords")).size()+" Custom words from Config file");
         this.wcl = new WCL(this);
         wcl.addListener(this);
-        if (updater.isPluginUpdated(Bukkit.getConsoleSender()))
-            Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "You can download the latest version from spigot!");
-        if (others.getConfig().getBoolean("AutoSave")) {
-            Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> {
+        getServer().getPluginManager().registerEvents(this, this);
+        Objects.requireNonNull(getCommand("worldchatter")).setExecutor(this);
+        this.others = new Others(this);
+        this.updater = new PluginUpdater(this);
+        new Thread("WorldChatter Side-Features Thread") {
+            public void run() {
                 others.createCustomConfig();
-                others.createcustombroadcastconfig();
                 others.createcustommessagesconfig();
+                others.loadConfigs();
                 others.loadCustomConfigs();
-            }, 0L, 20L);
-        }
-        startBroadcastTimer(getServer().getScheduler());
-        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.BLUE + "PlaceholderAPI " + ChatColor.YELLOW + "is not installed in ur server! " + ChatColor.GRAY + "(Using the default expressions)");
-        } else {
-            placeholderapisuppport = true;
-            Bukkit.getConsoleSender().sendMessage(ChatColor.BLUE + "PlaceholderAPI " + ChatColor.YELLOW + "is installed in ur server! " + ChatColor.GRAY + "(Using PlaceholderAPI's expressions)");
-        }
-    }
-
-    private void startBroadcastTimer(BukkitScheduler scheduler) {
-        scheduler.scheduleSyncDelayedTask(this, () -> {
-            String msg = Objects.requireNonNull(others.getBroadCastConfig().getList("Texts")).get(rand.nextInt(Objects.requireNonNull(others.getBroadCastConfig().getList("Texts")).size())).toString();
-            msg = msg.replace("%server players%", String.valueOf(getServer().getOnlinePlayers().size()));
-            String finalMsg = msg;
-            Objects.requireNonNull(others.getBroadCastConfig().getList("Worlds")).forEach(world -> Objects.requireNonNull(getServer().getWorld(world.toString())).getPlayers().forEach(player -> player.sendMessage(finalMsg.replace("%world players%", String.valueOf(Objects.requireNonNull(getServer().getWorld(world.toString())).getPlayers().size())))));
-            startBroadcastTimer(scheduler);
-        }, others.getBroadCastConfig().getInt("Time") * 20L);
+                if (updater.isPluginUpdated(Bukkit.getConsoleSender()))
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "From spigot, you can download the most recent version.");
+                if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Your server does not have "+ChatColor.BLUE+ "PlaceholderAPI"+ChatColor.YELLOW+" installed! " + ChatColor.GRAY + "(Utilizing the built-in expressions)");
+                } else {
+                    placeholderapisuppport = true;
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Your server does have "+ChatColor.BLUE+ "PlaceholderAPI"+ChatColor.YELLOW+" installed! " + ChatColor.GRAY + "(Using the expressions of PlaceholderAPI)");
+                }
+            }
+        }.start();
     }
 
     ArrayList<Player> seconds = new ArrayList<>();
@@ -106,18 +78,21 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
                     if (others.getConfig().getBoolean("AntiSwear")) {
                         ArrayList<String> badWords = others.badWordsFound(msg);
                         if (!badWords.isEmpty()) {
-                            this.wcl.detectswear(badWords, chat.getPlayer());
+                            for (WorldChatterListener hl : wcl.getlisteners())
+                                hl.onMessageSwear(badWords, chat.getPlayer());
                             chat.setCancelled(true);
                             return;
                         }
                     }
                     if (others.getConfig().getBoolean("AntiURL") && others.isUrl(msg)) {
-                        this.wcl.detectmessage(others.getUrl(msg), chat.getPlayer(), BlockType.URL);
+                        for (WorldChatterListener hl : wcl.getlisteners())
+                            hl.onMessageDetected(others.getUrl(msg), chat.getPlayer(), BlockType.URL);
                         chat.setCancelled(true);
                         return;
                     }
                     if (others.getConfig().getBoolean("AntiIP") && others.isIP(msg)) {
-                        this.wcl.detectmessage(others.getIP(msg), chat.getPlayer(), BlockType.IP);
+                        for (WorldChatterListener hl : wcl.getlisteners())
+                            hl.onMessageDetected(others.getIP(msg), chat.getPlayer(), BlockType.IP);
                         chat.setCancelled(true);
                         return;
                     }
@@ -137,7 +112,8 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
                     seconds.add(chat.getPlayer());
                     Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(this, () -> seconds.remove(chat.getPlayer()), others.getConfig().getInt("AntiSpam") * 20L);
                 } else {
-                    this.wcl.detectmessage(msg, chat.getPlayer(), BlockType.SPAM);
+                    for (WorldChatterListener hl : wcl.getlisteners())
+                        hl.onMessageDetected(msg, chat.getPlayer(), BlockType.SPAM);
                     chat.setCancelled(true);
                 }
             } else {
@@ -152,47 +128,58 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
             Player player = (Player) sender;
             if (args.length == 1) {
                 if (args[0].equalsIgnoreCase("reload")) {
-                    player.sendMessage(ChatColor.YELLOW + "Reloading WorldChatter Config...");
+                    player.sendMessage(ChatColor.YELLOW + "Reloading the WorldChatter Configuration...");
                     others.createCustomConfig();
-                    others.createcustombroadcastconfig();
                     others.createcustommessagesconfig();
                     others.loadCustomConfigs();
-                    this.wcl.reloadconfig(sender);
-                }
-                if (args[0].equalsIgnoreCase("update"))
+                    for (WorldChatterListener hl : wcl.getlisteners())
+                        hl.onConfigReload(sender);
+                } else if (args[0].equalsIgnoreCase("update")) {
                     if (updater.isPluginUpdated(player)) {
-                        player.sendMessage(ChatColor.YELLOW + "Update Found, Check the console for more details!");
+                        player.sendMessage(ChatColor.YELLOW + "Update discovered, For more information, check the console!");
                     } else {
-                        player.sendMessage(ChatColor.YELLOW + "No Updates were found, Check the console for more details!");
+                        player.sendMessage(ChatColor.YELLOW + "There were no updates found; please consult the console for more information!");
                     }
-                if (args[0].equalsIgnoreCase("lock"))
+                } else if (args[0].equalsIgnoreCase("lock")) {
                     if (!others.getConfig().getBoolean("ChatLock")) {
-                        sender.sendMessage(ChatColor.RED + "Cannot lock the chat! " + ChatColor.YELLOW + "because, the \"ChatLock\" feature is disabled\nYou can enable it in the config");
+                        sender.sendMessage(ChatColor.RED + "The chat cannot be locked! " + ChatColor.YELLOW + "Because the \"ChatLock\" feature is disabled, it is possible to enable it in the configuration.");
                     } else {
                         lockChat = !lockChat;
-                        this.wcl.chattoogle(player, lockChat);
+                        for (WorldChatterListener hl : wcl.getlisteners())
+                            hl.onChatLockToggle(player, lockChat);
                     }
+                } else if (args[0].equalsIgnoreCase("help")) {
+                    player.sendMessage(ChatColor.GREEN + "You have (Help/update/lock/reload) ez.");
+                } else {
+                    player.sendMessage(ChatColor.RED + "I'm not sure what that is.");
+                }
             }
         } else if (!(sender instanceof Player) &&
                 args.length == 1) {
             if (args[0].equalsIgnoreCase("reload")) {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Reloading WorldChatter Configs...");
+                Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Reloading the WorldChatter Configuration...");
                 others.createCustomConfig();
-                others.createcustombroadcastconfig();
                 others.createcustommessagesconfig();
                 others.loadCustomConfigs();
-                this.wcl.reloadconfig(sender);
-            }
-            if (args[0].equalsIgnoreCase("update") &&
-                    updater.isPluginUpdated(Bukkit.getConsoleSender()))
-                Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "You can download the latest version from spigot!");
-            if (args[0].equalsIgnoreCase("lock"))
+                for (WorldChatterListener hl : wcl.getlisteners())
+                    hl.onConfigReload(sender);
+            } else if (args[0].equalsIgnoreCase("update")) {
+                if (updater.isPluginUpdated(Bukkit.getConsoleSender())) {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "From spigot, you can download the most recent version.");
+                }
+            } else if (args[0].equalsIgnoreCase("lock")) {
                 if (!others.getConfig().getBoolean("ChatLock")) {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Cannot lock the chat! " + ChatColor.YELLOW + "because, the \"ChatLock\" feature is disabled\nYou can enable it in the config");
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "The chat cannot be locked! " + ChatColor.YELLOW + "Because the \"ChatLock\" feature is disabled, it is possible to enable it in the configuration.");
                 } else {
                     lockChat = !lockChat;
-                    this.wcl.chattoogle(Bukkit.getConsoleSender(), lockChat);
+                    for (WorldChatterListener hl : wcl.getlisteners())
+                        hl.onChatLockToggle(Bukkit.getConsoleSender(), lockChat);
                 }
+            } else if (args[0].equalsIgnoreCase("help")) {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "You have (Help/update/lock/reload) ez.");
+            } else {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "I'm not sure what that is.");
+            }
         }
         return true;
     }
@@ -213,24 +200,22 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
     @Override
     public void onChatLockToggle(CommandSender sender, Boolean isLocked) {
         if (Boolean.TRUE.equals(isLocked))
-            sender.sendMessage(ChatColor.GREEN + "The Chat is now " + ChatColor.YELLOW + "Locked!");
+            sender.sendMessage(ChatColor.YELLOW + "The chat is now " + ChatColor.RED + "closed!");
         else
-            sender.sendMessage(ChatColor.GREEN + "The Chat is now " + ChatColor.YELLOW + "Unlocked!");
+            sender.sendMessage(ChatColor.YELLOW + "The chat is now " + ChatColor.GREEN + "opened!");
     }
 
     @Override
     public void onUpdateCheck(String oldversion, String newversion, CommandSender sender) {
-        // Do nothing to prevent the listener error
+        // nothing
     }
 
     @Override
     public void onConfigReload(CommandSender sender) {
-        sender.sendMessage(ChatColor.GREEN + "Reloaded WorldChatter Config!");
+        sender.sendMessage(ChatColor.GREEN + "The WorldChatter Config has been reloaded!");
     }
 
     public WCL getWcl() {
         return this.wcl;
-
     }
-
 }

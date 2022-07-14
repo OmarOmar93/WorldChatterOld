@@ -1,6 +1,7 @@
 package mc.omaromar93.classes;
 
 import mc.omaromar93.API.Events.WCL;
+import mc.omaromar93.API.Events.WorldChatterListener;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -9,19 +10,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-public class PluginUpdater extends Thread {
+public class PluginUpdater {
 
     WorldChatter main;
     WCL wcl;
 
+
     public PluginUpdater(WorldChatter plugin) {
         this.main = plugin;
         this.wcl = plugin.getWcl();
-
-    }
-
-    public void run() {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Running the Plugin Updater in it's own thread..");
     }
 
     public boolean isPluginUpdated(CommandSender sender) {
@@ -31,20 +28,23 @@ public class PluginUpdater extends Thread {
             int update2 = Integer.parseInt(update.replace(".", ""));
             int updateold = Integer.parseInt(this.main.getDescription().getVersion().replace(".", ""));
             if (update2 > updateold) {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "New WorldChatter Update available! " + ChatColor.GRAY + "-> " + ChatColor.GREEN + update);
-                this.wcl.updateevent(update, this.main.getDescription().getVersion(), sender);
+                Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "WorldChatter has released a new update! " + ChatColor.GRAY + "-> " + ChatColor.GREEN + update);
+                for (WorldChatterListener hl : wcl.getlisteners())
+                    hl.onUpdateCheck(update, this.main.getDescription().getVersion(), sender);
                 return true;
             }
-            else if (update2 < updateold) {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Looks like you're using an Early-access version of WorldChatter " + ChatColor.DARK_GRAY + "Or you just changed the code");
-                this.wcl.updateevent(update, this.main.getDescription().getVersion(), sender);
+            if (update2 < updateold) {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "You appear to be using an early-access version of WorldChatter " + ChatColor.DARK_GRAY + "Perhaps the API hasn't been updated yet.");
+                for (WorldChatterListener hl : wcl.getlisteners())
+                    hl.onUpdateCheck(update, this.main.getDescription().getVersion(), sender);
                 return true;
-            }else {
-                this.wcl.updateevent(update, this.main.getDescription().getVersion(), sender);
-                Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "You're using the latest WorldChatter!");
-                return false;
             }
-        } catch (Exception ignore) {
+            for (WorldChatterListener hl : wcl.getlisteners())
+                hl.onUpdateCheck(update, this.main.getDescription().getVersion(), sender);
+            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "You're using the most recent version of WorldChatter!");
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return false;
     }
@@ -58,4 +58,5 @@ public class PluginUpdater extends Thread {
         in.close();
         return url;
     }
+
 }

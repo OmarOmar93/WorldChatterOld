@@ -1,7 +1,7 @@
 # - WorldChatter System-Messages - #
 
-IPMessage: "&cDetected an IP from this message by &e%player%: &4%message%"
+IPMessage: "&cAn IP address was discovered in this message from &e%player%: &4%message%"
 
-URLMessage: "&cDetected a URL from this message by &e%player%: &4%message%"
+URLMessage: "&cA URL was discovered in this message from &e%player%: &4%message%"
 
-SwearDetected: "&cDetected %words_size% words from this message by &e%player%: &4%words%"
+SwearDetected: "&e%player%'s &cmessage contained %words_size% words that were detected: &4%words%"

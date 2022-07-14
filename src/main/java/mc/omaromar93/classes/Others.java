@@ -7,18 +7,16 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 @SuppressWarnings("ALL")
-public class Others extends Thread {
+public class Others {
 
     WorldChatter main;
+
     public Others(WorldChatter plugin) {
         this.main = plugin;
     }
@@ -32,25 +30,21 @@ public class Others extends Thread {
 
     private FileConfiguration MessageConfig;
 
-    public FileConfiguration getConfig(){
+    public FileConfiguration getConfig() {
         return this.Config;
     }
 
-    public FileConfiguration getBroadCastConfig(){
+    public FileConfiguration getBroadCastConfig() {
         return this.BroadCastConfig;
     }
 
-    public FileConfiguration getMessageConfig(){
+    public FileConfiguration getMessageConfig() {
         return this.MessageConfig;
-    }
-
-    public void run() {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Running the Side-Features in it's own thread..");
     }
 
     void loadConfigs() {
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(new URL("https://docs.google.com/spreadsheets/d/1hIEi2YG3ydav1E06Bzf2mQbGZ12kh2fe4ISgLg_UBuM/export?format=csv").openConnection().getInputStream()));
+            BufferedReader reader = new BufferedReader(new BufferedReader(new InputStreamReader((this.main.getResource("swearwords.txt")))));
             String line;
             int counter = 0;
             while ((line = reader.readLine()) != null) {
@@ -58,9 +52,6 @@ public class Others extends Thread {
                 String[] content;
                 try {
                     content = line.split(",");
-                    if (content[0].contains("whatsapp")) {
-                        continue;
-                    }
                     String word = content[0];
                     String[] ignore_in_combination_with_words = new String[]{};
                     if (content.length > 1) {
@@ -76,7 +67,7 @@ public class Others extends Thread {
                     e.printStackTrace();
                 }
             }
-            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Loaded "+ChatColor.YELLOW + counter + " words to filter out");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + ""+ counter + ChatColor.GREEN + " words have been loaded to be filtered");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -152,7 +143,6 @@ public class Others extends Thread {
         return bool;
     }
 
-
     String getUrl(String str) {
         String[] parts2 = str.split(" ");
         for (String item : parts2) {
@@ -183,26 +173,11 @@ public class Others extends Thread {
         if (!configFile.exists()) {
             configFile.getParentFile().mkdirs();
             this.main.saveResource("WorldChatter.yml", false);
-            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Created WorldChatter Config!");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "A WorldChatter Config was created!");
         }
         Config = new YamlConfiguration();
         try {
             Config.load(configFile);
-        } catch (IOException | InvalidConfigurationException e) {
-            e.printStackTrace();
-        }
-    }
-
-    void createcustombroadcastconfig() {
-        File broadcastfile = new File(this.main.getDataFolder(), "AutoBroadCast.yml");
-        if (!broadcastfile.exists()) {
-            broadcastfile.getParentFile().mkdirs();
-            this.main.saveResource("AutoBroadCast.yml", false);
-            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Created WorldChatter Auto-BroadCast Config!");
-        }
-        BroadCastConfig = new YamlConfiguration();
-        try {
-            BroadCastConfig.load(broadcastfile);
         } catch (IOException | InvalidConfigurationException e) {
             e.printStackTrace();
         }
@@ -213,7 +188,7 @@ public class Others extends Thread {
         if (!broadcastfile.exists()) {
             broadcastfile.getParentFile().mkdirs();
             this.main.saveResource("SystemMessages.yml", false);
-            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Created WorldChatter System-Messages Config!");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Configured the WorldChatter System-Messages!");
         }
         MessageConfig = new YamlConfiguration();
         try {
