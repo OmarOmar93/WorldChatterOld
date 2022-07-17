@@ -1,4 +1,4 @@
-package mc.omaromar93.API.Events;
+package mc.omaromar93.api.Events;
 
 import org.bukkit.plugin.java.JavaPlugin;
 

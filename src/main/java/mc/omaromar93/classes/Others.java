@@ -25,21 +25,21 @@ public class Others {
     private final HashMap<String, Integer> customwords = new HashMap<>();
 
     private int largestWordLength = 0;
-    private FileConfiguration Config;
-    private FileConfiguration BroadCastConfig;
+    private FileConfiguration config;
+    private FileConfiguration broadCastconfig;
 
-    private FileConfiguration MessageConfig;
+    private FileConfiguration messageconfig;
 
     public FileConfiguration getConfig() {
-        return this.Config;
+        return this.config;
     }
 
     public FileConfiguration getBroadCastConfig() {
-        return this.BroadCastConfig;
+        return this.broadCastconfig;
     }
 
     public FileConfiguration getMessageConfig() {
-        return this.MessageConfig;
+        return this.messageconfig;
     }
 
     void loadConfigs() {
@@ -63,19 +63,17 @@ public class Others {
                     }
                     words.put(word.replaceAll(" ", ""), ignore_in_combination_with_words);
 
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } catch (Exception ignore) {
                 }
             }
             Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + ""+ counter + ChatColor.GREEN + " words have been loaded to be filtered");
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ignore) {
         }
     }
 
     void loadCustomConfigs() {
         customwords.clear();
-        for (Object o : Objects.requireNonNull(Config.getList("CustomSwearWords"))) {
+        for (Object o : Objects.requireNonNull(config.getList("CustomSwearWords"))) {
             customwords.put(o.toString().toLowerCase(), 1);
         }
     }
@@ -85,15 +83,15 @@ public class Others {
             return new ArrayList<>();
         }
         String input2 = input;
-        input = input.replaceAll("1", "i");
-        input = input.replaceAll("!", "i");
-        input = input.replaceAll("3", "e");
-        input = input.replaceAll("4", "a");
-        input = input.replaceAll("@", "a");
-        input = input.replaceAll("5", "s");
-        input = input.replaceAll("7", "t");
-        input = input.replaceAll("0", "o");
-        input = input.replaceAll("9", "g");
+        input = input.replace("1", "i");
+        input = input.replace("!", "i");
+        input = input.replace("3", "e");
+        input = input.replace("4", "a");
+        input = input.replace("@", "a");
+        input = input.replace("5", "s");
+        input = input.replace("7", "t");
+        input = input.replace("0", "o");
+        input = input.replace("9", "g");
         input = ChatColor.stripColor(input);
         input2 = ChatColor.stripColor(input2);
 
@@ -175,9 +173,9 @@ public class Others {
             this.main.saveResource("WorldChatter.yml", false);
             Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "A WorldChatter Config was created!");
         }
-        Config = new YamlConfiguration();
+        config = new YamlConfiguration();
         try {
-            Config.load(configFile);
+            config.load(configFile);
         } catch (IOException | InvalidConfigurationException e) {
             e.printStackTrace();
         }
@@ -190,9 +188,9 @@ public class Others {
             this.main.saveResource("SystemMessages.yml", false);
             Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Configured the WorldChatter System-Messages!");
         }
-        MessageConfig = new YamlConfiguration();
+        messageconfig = new YamlConfiguration();
         try {
-            MessageConfig.load(broadcastfile);
+            messageconfig.load(broadcastfile);
         } catch (IOException | InvalidConfigurationException e) {
             e.printStackTrace();
         }

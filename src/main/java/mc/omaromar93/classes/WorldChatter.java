@@ -1,9 +1,9 @@
 package mc.omaromar93.classes;
 
 
-import mc.omaromar93.API.Events.WCL;
-import mc.omaromar93.API.Events.WorldChatterListener;
-import mc.omaromar93.API.enums.BlockType;
+import mc.omaromar93.api.Events.WCL;
+import mc.omaromar93.api.Events.WorldChatterListener;
+import mc.omaromar93.api.enums.BlockType;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -30,10 +30,10 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
     private Boolean lockChat = false;
     private Boolean placeholderapisuppport = false;
     PluginUpdater updater;
-
-    @Override
-    public void onDisable() {
-    }
+    String papi = "PlaceholderAPI";
+    String playerexpression = "%player%";
+    String chatlock = "ChatLock";
+    String antispam = "AntiSpam";
 
     @Override
     public void onEnable() {
@@ -44,6 +44,7 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
         this.others = new Others(this);
         this.updater = new PluginUpdater(this);
         new Thread("WorldChatter Side-Features Thread") {
+            @Override
             public void run() {
                 others.createCustomConfig();
                 others.createcustommessagesconfig();
@@ -51,11 +52,11 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
                 others.loadCustomConfigs();
                 if (updater.isPluginUpdated(Bukkit.getConsoleSender()))
                     Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "From spigot, you can download the most recent version.");
-                if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) {
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Your server does not have "+ChatColor.BLUE+ "PlaceholderAPI"+ChatColor.YELLOW+" installed! " + ChatColor.GRAY + "(Utilizing the built-in expressions)");
+                if (Bukkit.getPluginManager().getPlugin(papi) == null) {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Your server does not have "+ChatColor.BLUE+ papi+ChatColor.YELLOW+" installed! " + ChatColor.GRAY + "(Utilizing the built-in expressions)");
                 } else {
                     placeholderapisuppport = true;
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Your server does have "+ChatColor.BLUE+ "PlaceholderAPI"+ChatColor.YELLOW+" installed! " + ChatColor.GRAY + "(Using the expressions of PlaceholderAPI)");
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "Your server does have "+ChatColor.BLUE+ papi+ChatColor.YELLOW+" installed! " + ChatColor.GRAY + "(Using the expressions of PlaceholderAPI)");
                 }
             }
         }.start();
@@ -69,9 +70,9 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
             chat.getRecipients().clear();
             Set<Player> receivers = new HashSet<>(chat.getPlayer().getWorld().getPlayers());
             chat.getRecipients().addAll(receivers);
-            if (!others.getConfig().getBoolean("ChatLock") || Boolean.TRUE.equals(!lockChat)) {
+            if (!others.getConfig().getBoolean(chatlock) || Boolean.TRUE.equals(!lockChat)) {
                 String msg = chat.getMessage();
-                if (others.getConfig().isInt("AntiSpam") && (!(seconds.contains(chat.getPlayer()))) && others.getConfig().getInt("AntiSpam") >= 0) {
+                if (others.getConfig().isInt(antispam) && (!(seconds.contains(chat.getPlayer()))) && others.getConfig().getInt(antispam) >= 0) {
                     if (others.getConfig().getBoolean("ColoredText")) {
                         msg = ChatColor.translateAlternateColorCodes('&', chat.getMessage());
                     }
@@ -100,7 +101,7 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
                     if (others.getConfig().getBoolean("ChatFormatting")) {
                         if (Boolean.FALSE.equals(placeholderapisuppport)) {
                             chat.setFormat(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(others.getConfig().getString("FormatStyle"))
-                                    .replace("%player%", chat.getPlayer().getName())
+                                    .replace(playerexpression, chat.getPlayer().getName())
                                     .replace("%world%", chat.getPlayer().getWorld().getName())));
                         } else {
                             String textmessage = ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(others.getConfig().getString("FormatStyle")));
@@ -110,7 +111,7 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
                     }
                     chat.setMessage(finalMsg);
                     seconds.add(chat.getPlayer());
-                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(this, () -> seconds.remove(chat.getPlayer()), others.getConfig().getInt("AntiSpam") * 20L);
+                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(this, () -> seconds.remove(chat.getPlayer()), others.getConfig().getInt(antispam) * 20L);
                 } else {
                     for (WorldChatterListener hl : wcl.getlisteners())
                         hl.onMessageDetected(msg, chat.getPlayer(), BlockType.SPAM);
@@ -141,7 +142,7 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
                         player.sendMessage(ChatColor.YELLOW + "There were no updates found; please consult the console for more information!");
                     }
                 } else if (args[0].equalsIgnoreCase("lock")) {
-                    if (!others.getConfig().getBoolean("ChatLock")) {
+                    if (!others.getConfig().getBoolean(chatlock)) {
                         sender.sendMessage(ChatColor.RED + "The chat cannot be locked! " + ChatColor.YELLOW + "Because the \"ChatLock\" feature is disabled, it is possible to enable it in the configuration.");
                     } else {
                         lockChat = !lockChat;
@@ -168,7 +169,7 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
                     Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "From spigot, you can download the most recent version.");
                 }
             } else if (args[0].equalsIgnoreCase("lock")) {
-                if (!others.getConfig().getBoolean("ChatLock")) {
+                if (!others.getConfig().getBoolean(chatlock)) {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "The chat cannot be locked! " + ChatColor.YELLOW + "Because the \"ChatLock\" feature is disabled, it is possible to enable it in the configuration.");
                 } else {
                     lockChat = !lockChat;
@@ -187,14 +188,14 @@ public final class WorldChatter extends JavaPlugin implements Listener, WorldCha
     @Override
     public void onMessageDetected(Object detectedmessage, Player player, BlockType type) {
         if (type.equals(BlockType.IP))
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(others.getMessageConfig().getString("IPMessage")).replace("%player%", player.getName()).replace("%message%", detectedmessage.toString())));
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(others.getMessageConfig().getString("IPMessage")).replace(playerexpression, player.getName()).replace("%message%", detectedmessage.toString())));
         if (type.equals(BlockType.URL))
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(others.getMessageConfig().getString("URLMessage")).replace("%player%", player.getName()).replace("%message%", detectedmessage.toString())));
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(others.getMessageConfig().getString("URLMessage")).replace(playerexpression, player.getName()).replace("%message%", detectedmessage.toString())));
     }
 
     @Override
     public void onMessageSwear(ArrayList<String> badwords, Player player) {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(others.getMessageConfig().getString("SwearDetected")).replace("%player%", player.getName()).replace("%words%", String.join(", ", badwords)).replace("%words_size%", String.valueOf(badwords.size()))));
+        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', Objects.requireNonNull(others.getMessageConfig().getString("SwearDetected")).replace(playerexpression, player.getName()).replace("%words%", String.join(", ", badwords)).replace("%words_size%", String.valueOf(badwords.size()))));
     }
 
     @Override

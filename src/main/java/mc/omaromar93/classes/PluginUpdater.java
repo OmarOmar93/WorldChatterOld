@@ -1,7 +1,7 @@
 package mc.omaromar93.classes;
 
-import mc.omaromar93.API.Events.WCL;
-import mc.omaromar93.API.Events.WorldChatterListener;
+import mc.omaromar93.api.Events.WCL;
+import mc.omaromar93.api.Events.WorldChatterListener;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -43,8 +43,7 @@ public class PluginUpdater {
                 hl.onUpdateCheck(update, this.main.getDescription().getVersion(), sender);
             Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "You're using the most recent version of WorldChatter!");
             return false;
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ignore) {
         }
         return false;
     }

@@ -1,6 +1,6 @@
-package mc.omaromar93.API.Events;
+package mc.omaromar93.api.Events;
 
-import mc.omaromar93.API.enums.BlockType;
+import mc.omaromar93.api.enums.BlockType;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
